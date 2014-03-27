@@ -20,7 +20,9 @@ class Point(object):
 	#	self.coordinate = ar
 	#def test(self):
 	#	print self.coordinate[0]
-
+	# copyt of self
+	def copy(self):
+		return Point(ar = self.coordinate)
 	# access to the three coordinates
 	@property
 	def x(self):
@@ -90,7 +92,9 @@ class Vector(object):
 		else:
 			self.coordinate = np.array([x,y,z],dtype = np.float64)
 
-
+	#copy
+	def copy(self):
+		return Vector(ar = self.coordinate)
 	# data access
 	@property
 	def x(self):
@@ -197,8 +201,10 @@ class Matrix4x4(object):
 	def __init__(self):
 		self.mat = np.identity(4,dtype = np.float64)
 
-	def setIdentity():
+	def setIdentity(self):
 		self.mat = np.identity(4,dtype = np.float64)
+	def get(self):
+		return [self.mat[0,0],self.mat[1,0],self.mat[2,0],self.mat[3,0],self.mat[0,1],self.mat[1,1],self.mat[2,1],self.mat[3,1],self.mat[0,2],self.mat[1,2],self.mat[2,2],self.mat[3,2],self.mat[0,3],self.mat[1,3],self.mat[2,3],self.mat[3,3]]
 
 	@property 
 	def matrix(self):
@@ -265,9 +271,6 @@ class Matrix4x4(object):
 	@staticmethod
 	def uniformScale(scale,originPt):
 		v = originPt-Point.Origin()
-		print v
-		print Matrix4x4.translation(v)
-		print Matrix4x4.translation(v)*Matrix4x4.uniformScaleAroundOrigin(scale)
 		return Matrix4x4.translation(v)*Matrix4x4.uniformScaleAroundOrigin(scale)*Matrix4x4.translation(-v)
 	@staticmethod
 	def lookAt(eyePoint,targetPoint,upVector,isInverted):
@@ -285,19 +288,18 @@ class Matrix4x4(object):
 			M.mat[0,0] = x.x; M.mat[0,1] = y.x; M.mat[0,2] = z.x;
 			M.mat[1,0] = x.y; M.mat[1,1] = y.y; M.mat[1,2] = z.y;
 			M.mat[2,0] = x.z; M.mat[2,1] = y.z; M.mat[2,2] = z.z;
-			return Matrix4x4.translation(eyePoint-Point.Origin)*M
+			return Matrix4x4.translation(eyePoint-Point.Origin())*M
 		else:
 			M.mat[0,0] = x.x; M.mat[0,1] = x.y; M.mat[0.2] = x.z;
 			M.mat[1,0] = y.x; M.mat[1,1] = y.y; M.mat[1,2] = y.z;
 			M.mat[2,0] = z.x; M.mat[2,1] = z.y; M.mat[2,2] = z.z;
-			return M*Matrix4x4.translation(-(eyePoint-Point.Origin))
+			return M*Matrix4x4.translation(-(eyePoint-Point.Origin()))
 
 	def __mul__(a,b):
 		if isinstance(a,Matrix4x4):
 			if isinstance(b,Matrix4x4):
 				M = Matrix4x4()
 				M.mat = np.dot(a.mat,b.mat)
-				print M.mat
 				return M
 			elif isinstance(b,Vector):
 				tv = np.dot(a.mat[0:3,0:3],b.coordinate)
@@ -312,30 +314,6 @@ class Matrix4x4(object):
 
 # for debug:
 def main():
-	pt = Point(0.0,0.0,1.0)
-	pt2 = Point(1.0,0.0,0.0)
-	print pt-pt2
-	vec = Vector(3.0,0.0,0.0)
-	print pt+vec
-	vec2 = Vector(3.0,0.0,0.0)
-	print vec==vec2
-	vec2.set(4.0,1.0,3.0)
-	print vec^vec2
-	mat = Matrix4x4()
-	print mat
-	print mat.matrix
-	mat.matrix[1,2] = 10
-	print mat.matrix
-	print mat.translation(vec2)
-	print Matrix4x4().translation(vec2)
-	print 'rotation test'
-	print Matrix4x4.rotationAroundOrigin(1.57,vec2)
-	print 'scale test'
-	print Matrix4x4.uniformScale(3,Point(1,0,0))
-	print 'multipy test'
-	print Matrix4x4()*vec2
-	print Matrix4x4()*(Point.Origin()+vec2)
-
-	#print pt.x()
+	pass
 if __name__ == '__main__':
 	main()
