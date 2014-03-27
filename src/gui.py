@@ -7,7 +7,41 @@ from PyQt4 import QtOpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from camera import *
+import numpy as np
+from math import cos,sin
+
+#from models import *
+from ArcBall import *
 import sys
+
+PI2 = 2*np.pi
+
+
+#test models
+
+def Torus(MinorRadius,MajorRadius):
+	# draw a torus with normals
+	glBegin(GL_TRIANGLE_STRIP)
+	for i in xrange(20):
+		for j in xrange(-1,20):
+			if j < 0:
+				wrapFrac = (-j%20)/20.0
+				wrapFrac *= -1.0
+			else:
+				wrapFrac = (j%20)/20.0
+			phi = PI2*wrapFrac
+			sinphi = sin(phi)
+			cosphi = cos(phi)
+
+			r = MajorRadius + MinorRadius*cosphi
+			glNormal3f (sin(PI2*(i%20+wrapFrac)/20.0)*cosphi,sinphi,cos(PI2*(i%20+wrapFrac)/20.0)*cosphi)
+			glVertex3f (sin(PI2*(i%20+wrapFrac)/20.0)*r,MinorRadius*sinphi,cos(PI2*(i%20+wrapFrac)/20.0)*r)
+			glNormal3f (sin(PI2*(i+1%20+wrapFrac)/20.0)*cosphi, sinphi, cos(PI2*(i+1%20+wrapFrac)/20.0)*cosphi)
+			glVertex3f (sin(PI2*(i+1%20+wrapFrac)/20.0)*r, MinorRadius*sinphi, cos(PI2*(i+1%20+wrapFrac)/20.0)*r)
+	glEnd()													# // Done Torus
+	return
+
+
 
 class Viewer3DWidget(QtOpenGL.QGLWidget):
 	def __init__(self,parent = None):
@@ -17,69 +51,119 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		self.camera.setSceneRadius(2)
 		self.camera.reset()
 		self.isPressed = False
+		self.lastRot = Matrix3fT()
+		self.thisRot = Matrix3fT()
+		self.g_Transform = Matrix4fT()
+		self.g_ArcBall = ArcBallT(640,480)
 		self.oldx = self.oldy = 0
-
-	def paintGL(self):
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity()
-		self.camera.transform()
-		glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity()
-
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
+		self.initGL(640,480)
+	def initGL(self,width,height):
+		"""
+		# Enable smooth color
+		glShadeModel(GL_SMOOTH)
+		# to black
+		glClearColor(0.0,0.0,0.0,0.5)
+		# enable depty test
+		glEnable(GL_DEPTH_TEST)
+		# type of depth test
+		glDepthFunc(GL_LEQUAL)
+		# nice perspective calculation
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST)
+		"""
+		glClearColor(0.0,0.0,0.0,1.0)
+		glClearDepth(1.0)
 		glDepthFunc(GL_LEQUAL)
 		glEnable(GL_DEPTH_TEST)
-		glEnable(GL_CULL_FACE)
-		glFrontFace(GL_CCW)
-		glDisable(GL_LIGHTING)
 		glShadeModel(GL_FLAT)
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST)
 
-		glColor(1.0,1.0,1.0)
-		glBegin(GL_LINE_STRIP)
-		glVertex(-1,-1,-1)
-		glVertex(1,-1,-1)
-		glVertex(1,1,-1)
-		glEnd()
-		glColor(1.0,0.0,0.0)
-		glBegin(GL_LINES)
-		glVertex(0,0,0)
-		glVertex(1,0,0)
-		glEnd()
+		glEnable(GL_LIGHT0)
+		glEnable(GL_LIGHTING)
 
+		glEnable(GL_COLOR_MATERIAL)
+
+	def paintGL(self):
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+		glLoadIdentity()
+		glTranslatef(-1.5,0.0,-6.0);
+		#print '1'
+		glPushMatrix()
+		glMultMatrixf(self.g_Transform)
+		glColor3f(0.75,1.0,1.0)
+		Torus(0.30,1.00)
+		glPopMatrix()
+		#print '2'
+		glLoadIdentity()
+		glTranslatef(1.5,0.0,-6.0)
+		#print '3'
+		glPushMatrix()
+		glMultMatrixf(self.g_Transform)
+		glColor3f(1.0,0.75,0.75)
+		#gluSphere(g_quadratic,1.3,20,20)
+		glPopMatrix()
+		#print '2'
 		glFlush()
+		#self.swapBuffers()
+		# glMatrixMode(GL_PROJECTION)
+		# glLoadIdentity()
+		# self.camera.transform()
+		# glMatrixMode(GL_MODELVIEW)
+		# glLoadIdentity()
 
-	def resizeGL(self,widthInPixels,heightInPixels):
-		self.camera.setViewportDimensions(widthInPixels,heightInPixels)
-		glViewport(0,0,widthInPixels,heightInPixels)
+		# glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-	def initializeGL(self):
-		glClearColor(0.,0.,0.,1.0)
-		glClearDepth(1.0)
+		# glDepthFunc(GL_LEQUAL)
+		# glEnable(GL_DEPTH_TEST)
+		# glEnable(GL_CULL_FACE)
+		# glFrontFace(GL_CCW)
+		# glDisable(GL_LIGHTING)
+		# glShadeModel(GL_FLAT)
 
+		# glFlush()
 
+	def resizeGL(self,width,height):
+		if height == 0:
+			height = 1
+		glViewport(0,0,width,height)
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
+		gluPerspective(45.0,float(width)/float(height),1,100.0)
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
+		self.g_ArcBall.setBounds(width,height)
+		return
+		#self.camera.setViewportDimensions(widthInPixels,heightInPixels)
+		#glViewport(0,0,widthInPixels,heightInPixels)
 	def mouseMoveEvent(self,mouseEvent):
-		if int(mouseEvent.buttons()) != QtCore.Qt.NoButton:
-			# dragging
-			delta_x = mouseEvent.x()-self.oldx
-			delta_y = self.oldy - mouseEvent.y()
-			if int(mouseEvent.buttons()) & QtCore.Qt.LeftButton:
-				if int(mouseEvent.buttons()) & QtCore.Qt.MidButton:
-					self.camera.dollyCameraForward(3*(delta_x+delta_y),False)
-				else:
-					self.camera.orbit(self.oldx,self.oldy,mouseEvent.x(),mouseEvent.y())
-			elif int(mouseEvent.buttons()) & QtCore.Qt.MidButton:
-				self.camera.translateSceneRightAndUp(delta_x,delta_y)
-			self.update()
-		self.oldx = mouseEvent.x()
-		self.oldy = mouseEvent.y()
-	def mouseDoubleClickEvent(self,mouseEvent):
-		print 'double click'
+		if mouseEvent.buttons() ==QtCore.Qt.LeftButton and self.isPressed:
+			mouse_pt = Point2fT(mouseEvent.x(),mouseEvent.y())
+			ThisQuat = self.g_ArcBall.drag(mouse_pt)
+			self.thisRot = Matrix3fSetRotationFromQuat4f(ThisQuat)
 
+			self.thisRot = Matrix3fMulMatrix3f(self.lastRot,self.thisRot)
+
+			self.g_Transform = Matrix4fSetRotationFromMatrix3f(self.g_Transform,self.thisRot)
+			self.update()
 	def mousePressEvent(self,mouseEvent):
-		self.isPressed = True
+		if mouseEvent.buttons() == QtCore.Qt.LeftButton:
+			self.isPressed = True
+			mouse_pt = Point2fT(mouseEvent.x(),mouseEvent.y())
+			self.g_ArcBall.click(mouse_pt)
 	def mouseReleaseEvent(self,mouseEvent):
-		self.isPressed = False
+		print 'lala'
+		print mouseEvent.buttons()
+		if mouseEvent.button() == QtCore.Qt.LeftButton:
+			self.isPressed = False
+			print ' left button release'
+			self.lastRot = self.thisRot.copy()
+			#self.update()
+		elif mouseEvent.button() == QtCore.Qt.RightButton:
+			print 'lalalala'
+			self.lastRot = Matrix3fSetIdentity()
+			self.thisRot = Matrix3fSetIdentity()
+			self.g_Transform = Matrix4fSetRotationFromMatrix3f(self.g_Transform,self.thisRot)
+			#self.update()
+		self.update()
 
 class PyQtGL(QtGui.QMainWindow):
 	def __init__(self):
@@ -109,6 +193,7 @@ class PyQtGL(QtGui.QMainWindow):
 			vbox.addWidget(button1)
 			vbox.addStretch(1)
 			viewer3D.setSizePolicy(QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
+			viewer3D.resize(640,480)
 			hbox = QtGui.QHBoxLayout()
 			hbox.addLayout(vbox)
 			hbox.addWidget(viewer3D)
@@ -116,7 +201,7 @@ class PyQtGL(QtGui.QMainWindow):
 			parentWidget.setLayout(hbox)
 			self.setCentralWidget(viewer3D)
 
-		self.resize(500,500)
+		#self.resize(500,500)
 	def closeEvent(self,event):
 		reply = QtGui.QMessageBox.question(self,"Confirmation","Are you sure to quit?",QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
