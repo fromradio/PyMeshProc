@@ -16,3 +16,5 @@ class camera:
 		self.viewportWidthInPixels = 10
 		self.viewportHeightInPixels = 10
 		self.viewportRadiusInPixels = 5
+
+		self.sceneRadius = 10

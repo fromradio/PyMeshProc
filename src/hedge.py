@@ -35,3 +35,4 @@ class Mesh:
 		if ext != ".obj":
 			print "only support obj file right now"
 			return None
+		

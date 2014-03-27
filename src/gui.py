@@ -13,6 +13,7 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 	def __init__(self,parent = None):
 		super(Viewer3DWidget,self).__init__(parent)
 		self.setMouseTracking(True)
+		self.camera 
 
 def main():
 	pass
