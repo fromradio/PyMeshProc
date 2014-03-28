@@ -47,29 +47,20 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 	def __init__(self,parent = None):
 		super(Viewer3DWidget,self).__init__(parent)
 		self.setMouseTracking(True)
-		self.camera = camera()
-		self.camera.setSceneRadius(2)
-		self.camera.reset()
+		#self.camera = camera()
+		#self.camera.setSceneRadius(2)
+		#self.camera.reset()
 		self.isPressed = False
 		self.lastRot = Matrix3fT()
 		self.thisRot = Matrix3fT()
 		self.g_Transform = Matrix4fT()
 		self.g_ArcBall = ArcBallT(640,480)
 		self.oldx = self.oldy = 0
-		self.initGL(640,480)
-	def initGL(self,width,height):
-		"""
-		# Enable smooth color
-		glShadeModel(GL_SMOOTH)
-		# to black
-		glClearColor(0.0,0.0,0.0,0.5)
-		# enable depty test
-		glEnable(GL_DEPTH_TEST)
-		# type of depth test
-		glDepthFunc(GL_LEQUAL)
-		# nice perspective calculation
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST)
-		"""
+		#self.initGL(640,480)
+		#self.init()
+		#glClearColor(1.0,0.0,0.0,1.0)
+	"""
+	def initGL(self):
 		glClearColor(0.0,0.0,0.0,1.0)
 		glClearDepth(1.0)
 		glDepthFunc(GL_LEQUAL)
@@ -81,8 +72,25 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		glEnable(GL_LIGHTING)
 
 		glEnable(GL_COLOR_MATERIAL)
+	"""
+	def init(self):
+		# something wrong in window7 and PyOpenGL Platform
+		# everthing is ok in MacOsX
+		#glClearColor(1.0,0.0,0.0,0.5)
+		#glClearDepth(1.0)
+		#glDepthFunc(GL_LEQUAL)
+		#glEnable(GL_DEPTH_TEST)
+		#glShadeModel(GL_FLAT)
+		#glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST)
+		#glEnable(GL_LIGHT0)
+		#glEnable(GL_LIGHTING)
+		pass
 
 	def paintGL(self):
+		# glClearColor safe here strange
+		#glClearColor(1.0,0.0,0.0,1.0)
+
+
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 		glLoadIdentity()
 		glTranslatef(-1.5,0.0,-6.0);
