@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-# written by Ruimin Wang(ruimin.wang13@gmail.com)
+# simple geometric kernel for OpenGL
+# rewritten by Ruimin Wang(ruimin.wang13@gmail.com)
 
 import math
 import numpy as np

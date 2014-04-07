@@ -3,6 +3,7 @@
 
 import numpy as np
 import os
+# simple geometric kernel
 from geometry import *
 
 class Vertex(object):
@@ -13,7 +14,12 @@ class Vertex(object):
 	def __init__(self,x=0.0,y=0.0,z=0.0):
 		self._point = Point(x,y,z)
 		self._vertexbegin= None;
-
+	# overload '__repr__', print the geometric position
+	def __repr__(self):
+		return "The geometric position is (%f,%f,%f)"%(self._point.x,self._point.y,self._point.z)
+	# overload '__str__', the same as '__repr__'
+	def __str__(self):
+		return "The geometric position is (%f,%f,%f)"%(self._point.x,self._point.y,self._point.z)
 	# 'point' property
 	@property 
 	def point(self):
@@ -91,13 +97,32 @@ class MeshConstruction(object):
 		objFile = open(self._mesh._filename,'r')
 
 		count = 0
+		faceList = []
 		for l in objFile:
 			splited = l.split()
-			if splited[0] == 'v':
+			if len(splited) == 0:
+				pass
+			elif splited[0] == 'v':
 				# the vertex
-				self._mesh
+				x = float(splited[1])
+				y = float(splited[2])
+				z = float(splited[3])
+				v = Vertex(x,y,z)
+				self._mesh.appendVertex(v)
+			elif splited[0] == 'f':
+				# the facet
+				vl = []
+				for i in range(1,len(splited)):
+					# in case of vt
+					splitedFaceData = splited[i].split('/')
+					# set the index (0 as beginning)
+					vl.append(int(splitedFaceData[0])-1)
+				# push the vertex list
+				faceList.append(vl)
+				if count == 8000:
+					print vl
 			count += 1
-			
+		self._mesh.selfCombination()
 			
 class Mesh(object):
 	"""
@@ -108,6 +133,7 @@ class Mesh(object):
 		self._halfedges = []
 		self._facets = []
 		self._filename = ''
+		self._sizeOfVertices=0
 
 	def readFile(self,filename):
 		# read from a file
@@ -127,6 +153,16 @@ class Mesh(object):
 			raise ValueError("Type Error, should be 'Vertex'")
 		else:
 			self._vertices.append(vertex)
+	# compute some necessary values
+	def selfCombination(self):
+		self._sizeOfVertices = len(self._vertices)
+
+	# get the i-th vertex
+	def vertex(self,i):
+		if i < 0 or i >= self._sizeOfVertices:
+			raise ValueError("Index out of range via obtaining the vertex")
+		else:
+			return self._vertices[i]
 """
 debug
 """
@@ -138,6 +174,8 @@ def main():
 	m.readFile("test.obj")
 	mc = MeshConstruction()
 	mc.meshConstruction(m)
+	print len(m._vertices)
+	print m.vertex(2)
 
 if __name__=='__main__':
 	main()
