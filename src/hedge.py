@@ -43,6 +43,8 @@ class Halfedge(object):
 	'Halfedge' data structure
 	"""
 	def __init__(self):
+		# opposite halfedge
+		self._oppo = None
 		# previous halfedge
 		self._prev = None
 		# next halfedge
@@ -50,7 +52,14 @@ class Halfedge(object):
 		# vertex handle
 		self._vertex = Vertex()
 		# is border
-		self._isBorder = True
+		self._isBorder = False
+	def opposite(self):
+		return self._oppo
+	def setOpposite(self,val):
+		if isinstance(val,Halfedge):
+			self._prev = val
+		else:
+			raise ValueError("Type Error: Should be 'Halfedge'")
 	def prev(self):
 		return self._prev
 	def setPrev(self,val):
@@ -122,8 +131,80 @@ class MeshConstruction(object):
 				if count == 8000:
 					print vl
 			count += 1
+		# halfedge construction
+		self.halfedgeConstruction(faceList)
+		# the mesh organize some information
 		self._mesh.selfCombination()
-			
+	def halfedgeConstruction(self,facetList):
+		"""
+		Construct the halfedge structure based on the facetList
+		"""
+		edges = []
+		# the temporary map of the halfedges
+		edgeMap = {}
+		count = 0
+		for i in range(0,len(facetList)):
+			# 
+			for j in range(0,len(facetList[i])):
+				# j is the index of the current vertex
+				key = (facetList[i][j-1],facetList[i][j])
+				edges.append(key)
+				edgeMap[key] = count
+				count += 1
+				# initialze the current halfedge
+				he = Halfedge()
+				# assume that the mesh has been well oriented
+				he.setVertex(self._mesh._vertices[facetList[i][j]])
+				self._mesh._halfedges.append(he)
+		# construct the opposite halfedge
+		for key in edgeMap:
+			i = edgeMap[key]
+			if self._mesh._halfedges[i].opposite() is None:
+				# the opposite has not been set
+				oppo = key[1],key[0]
+				if oppo in edgeMap:
+					# interior edge
+					j = edgeMap[oppo]
+					self._mesh._halfedges[i].setOpposite(self._mesh._halfedges[j])
+					self._mesh._halfedges[j].setOpposite(self._mesh._halfedges[i])
+				else:
+					# border edge
+					# construct a border halfedge
+					he = Halfedge()
+					# the edge is border edge
+					he._isBorder = True
+					self._mesh._halfedges[i].setOpposite(he)
+					he.setOpposite(self._mesh._halfedges[i])
+					# append the halfedge
+					self._mesh._halfedges.append(he)
+					count += 1
+					edgeMap[(key[1],key[0])] = count
+					edges.append((key[1],key[0]))
+		# set next and prev halfedge
+		# the interior edges
+		count = 0
+		for i in range(0,len(facetList)):
+			for j in range(0,len(facetList[i])):
+				if j == len(facetList[i])-1:
+					# the last edge: the next edge is the beggining edge
+					self._mesh._halfedges[count+j].setNext(self._mesh._halfedges[count])
+					self._mesh._halfedges[count+j].setPrev(self._mesh._halfedges[count+j-1])
+				elif j == 0:
+					# the beginning edge: the prev edge is the last one
+					self._mesh._halfedges[count+j].setNext(self._mesh._halfedges[count+j+1])
+					self._mesh._halfedges[count+j].setPrev(self._mesh._halfedges[count+len(facetList[i])-1])
+				else:
+					# the interior edge
+					self._mesh._halfedges[count+j].setNext(self._mesh._halfedges[count+j+1])
+					self._mesh._halfedges[count+j].setPrev(self._mesh._halfedges[count+j-1])
+			# the count
+			count += len(facetList[i])
+		# the border edges
+		for i in range(count,len(self._mesh._halfedges)):
+			# set the next
+			he = self._mesh._halfedges[i]
+			he.setNext(he.opposite().prev().opposite().prev().opposite())
+			he.setPrev(he.opposite().next().opposite().next().opposite())
 class Mesh(object):
 	"""
 	the class for mesh
@@ -157,7 +238,7 @@ class Mesh(object):
 	def selfCombination(self):
 		self._sizeOfVertices = len(self._vertices)
 
-	# get the i-th vertex
+	# obtain the i-th vertex
 	def vertex(self,i):
 		if i < 0 or i >= self._sizeOfVertices:
 			raise ValueError("Index out of range via obtaining the vertex")
