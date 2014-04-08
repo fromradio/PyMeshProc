@@ -9,6 +9,7 @@ from OpenGL.GLU import *
 from camera import *
 import numpy as np
 from math import cos,sin
+from meshdraw import *
 
 #from models import *
 from ArcBall import *
@@ -46,10 +47,7 @@ def Torus(MinorRadius,MajorRadius):
 class Viewer3DWidget(QtOpenGL.QGLWidget):
 	def __init__(self,parent = None):
 		super(Viewer3DWidget,self).__init__(parent)
-		self.setMouseTracking(True)
-		#self.camera = camera()
-		#self.camera.setSceneRadius(2)
-		#self.camera.reset()
+		#self.initGL(self.width(),self.height())
 		self.isPressed = False
 		self.lastRot = Matrix3fT()
 		self.thisRot = Matrix3fT()
@@ -57,10 +55,24 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		self.g_ArcBall = ArcBallT(640,480)
 		self.oldx = self.oldy = 0
 		#self.initGL(640,480)
-		#self.init()
-		#glClearColor(1.0,0.0,0.0,1.0)
-	"""
-	def initGL(self):
+
+		# test
+		self._mesh = Mesh()
+		self._mesh.readFile("test_.obj")
+
+	def initGL(self,width,height):
+		"""
+		# Enable smooth color
+		glShadeModel(GL_SMOOTH)
+		# to black
+		glClearColor(0.0,0.0,0.0,0.5)
+		# enable depty test
+		glEnable(GL_DEPTH_TEST)
+		# type of depth test
+		glDepthFunc(GL_LEQUAL)
+		# nice perspective calculation
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST)
+		"""
 		glClearColor(0.0,0.0,0.0,1.0)
 		glClearDepth(1.0)
 		glDepthFunc(GL_LEQUAL)
@@ -72,25 +84,8 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		glEnable(GL_LIGHTING)
 
 		glEnable(GL_COLOR_MATERIAL)
-	"""
-	def init(self):
-		# something wrong in window7 and PyOpenGL Platform
-		# everthing is ok in MacOsX
-		#glClearColor(1.0,0.0,0.0,0.5)
-		#glClearDepth(1.0)
-		#glDepthFunc(GL_LEQUAL)
-		#glEnable(GL_DEPTH_TEST)
-		#glShadeModel(GL_FLAT)
-		#glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST)
-		#glEnable(GL_LIGHT0)
-		#glEnable(GL_LIGHTING)
-		pass
 
 	def paintGL(self):
-		# glClearColor safe here strange
-		#glClearColor(1.0,0.0,0.0,1.0)
-
-
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 		glLoadIdentity()
 		glTranslatef(-1.5,0.0,-6.0);
@@ -98,7 +93,8 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		glPushMatrix()
 		glMultMatrixf(self.g_Transform)
 		glColor3f(0.75,1.0,1.0)
-		Torus(0.30,1.00)
+		self.draw()
+		#Torus(0.30,1.00)
 		glPopMatrix()
 		#print '2'
 		glLoadIdentity()
@@ -128,6 +124,8 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		# glShadeModel(GL_FLAT)
 
 		# glFlush()
+	def draw(self):
+		meshDrawPoints(self._mesh)
 
 	def resizeGL(self,width,height):
 		if height == 0:
@@ -208,6 +206,7 @@ class PyQtGL(QtGui.QMainWindow):
 
 			parentWidget.setLayout(hbox)
 			self.setCentralWidget(viewer3D)
+			print "haha",self.width(),self.height()
 
 		#self.resize(500,500)
 	def closeEvent(self,event):
@@ -224,7 +223,9 @@ def main():
 	app = QtGui.QApplication(sys.argv)
 	window = PyQtGL()
 	window.show()
+	print 'lolo'
 	sys.exit(app.exec_())
+	print 'lala'
 
 if __name__== '__main__':
 	main()

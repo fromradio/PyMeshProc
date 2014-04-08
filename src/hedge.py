@@ -53,11 +53,13 @@ class Halfedge(object):
 		self._vertex = Vertex()
 		# is border
 		self._isBorder = False
+		# facet
+		self._facet = None
 	def opposite(self):
 		return self._oppo
 	def setOpposite(self,val):
 		if isinstance(val,Halfedge):
-			self._prev = val
+			self._oppo = val
 		else:
 			raise ValueError("Type Error: Should be 'Halfedge'")
 	def prev(self):
@@ -81,6 +83,16 @@ class Halfedge(object):
 			self._vertex = val
 		else:
 			raise ValueError("The type should be 'Vertex'")
+	def facet(self):
+		return self._facet
+	def setFacet(self,val):
+		if isinstance(val,Facet):
+			self._facet = val
+		else:
+			raise ValueError("Type Error: Should be 'Facet'")
+
+	def isBorder(self):
+		return self._isBorder
 
 class Facet(object):
 	def __init__(self):
@@ -135,6 +147,9 @@ class MeshConstruction(object):
 		self.halfedgeConstruction(faceList)
 		# the mesh organize some information
 		self._mesh.selfCombination()
+
+		# some debug
+		print "There are ",len(self._mesh._halfedges)," halfedges"
 	def halfedgeConstruction(self,facetList):
 		"""
 		Construct the halfedge structure based on the facetList
@@ -178,8 +193,6 @@ class MeshConstruction(object):
 					# append the halfedge
 					self._mesh._halfedges.append(he)
 					count += 1
-					edgeMap[(key[1],key[0])] = count
-					edges.append((key[1],key[0]))
 		# set next and prev halfedge
 		# the interior edges
 		count = 0
@@ -201,10 +214,19 @@ class MeshConstruction(object):
 			count += len(facetList[i])
 		# the border edges
 		for i in range(count,len(self._mesh._halfedges)):
-			# set the next
 			he = self._mesh._halfedges[i]
-			he.setNext(he.opposite().prev().opposite().prev().opposite())
-			he.setPrev(he.opposite().next().opposite().next().opposite())
+			# first set the vertex
+			he.setVertex(he.opposite().prev().vertex())
+			# two kinds of situation
+			if he.opposite().prev().opposite().isBorder():
+				he.setNext(he.opposite().prev().opposite())
+			else:
+				he.setNext(he.opposite().prev().opposite().prev().opposite())
+			if he.opposite().next().opposite().isBorder():
+				he.setPrev(he.opposite().next().opposite())
+			else:
+				he.setPrev(he.opposite().next().opposite().next().opposite())
+			
 class Mesh(object):
 	"""
 	the class for mesh
@@ -224,6 +246,8 @@ class Mesh(object):
 			print "only support obj file right now"
 			return None
 		self._filename = filename
+		mc =MeshConstruction()
+		mc.meshConstruction(self)
 	# construct the halfedge structure via facet information
 	def constructFromFaceStructure(self,faceList):
 		for facet in facetList:
@@ -244,6 +268,13 @@ class Mesh(object):
 			raise ValueError("Index out of range via obtaining the vertex")
 		else:
 			return self._vertices[i]
+
+	def vertices(self):
+		return self._vertices
+	def destory(self):
+		self._vertices.clear()
+		self._halfedges.clear()
+		self._facets.clear()
 """
 debug
 """
@@ -253,8 +284,8 @@ def main():
 	v.debug()
 	m = Mesh()
 	m.readFile("test.obj")
-	mc = MeshConstruction()
-	mc.meshConstruction(m)
+	#mc = MeshConstruction()
+	#mc.meshConstruction(m)
 	print len(m._vertices)
 	print m.vertex(2)
 
