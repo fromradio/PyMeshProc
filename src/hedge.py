@@ -96,7 +96,11 @@ class Halfedge(object):
 
 class Facet(object):
 	def __init__(self):
-		pass
+		# halfedge handle of the facets
+		self._halfedges = []
+		self._ind = -1
+	def index(self):
+		return self._ind
 
 class MeshConstruction(object):
 	def __init__(self):

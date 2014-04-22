@@ -54,9 +54,6 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		self.g_Transform = Matrix4fT()
 		self.g_ArcBall = ArcBallT(640,480)
 		self.oldx = self.oldy = 0
-		#self.initGL(640,480)
-
-		# test
 		self._mesh = Mesh()
 		self._mesh.readFile("test_.obj")
 
@@ -137,7 +134,7 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
 		self.g_ArcBall.setBounds(width,height)
-		return
+		#return
 		#self.camera.setViewportDimensions(widthInPixels,heightInPixels)
 		#glViewport(0,0,widthInPixels,heightInPixels)
 	def mouseMoveEvent(self,mouseEvent):
@@ -160,11 +157,9 @@ class Viewer3DWidget(QtOpenGL.QGLWidget):
 		print mouseEvent.buttons()
 		if mouseEvent.button() == QtCore.Qt.LeftButton:
 			self.isPressed = False
-			print ' left button release'
 			self.lastRot = self.thisRot.copy()
 			#self.update()
 		elif mouseEvent.button() == QtCore.Qt.RightButton:
-			print 'lalalala'
 			self.lastRot = Matrix3fSetIdentity()
 			self.thisRot = Matrix3fSetIdentity()
 			self.g_Transform = Matrix4fSetRotationFromMatrix3f(self.g_Transform,self.thisRot)
@@ -206,9 +201,6 @@ class PyQtGL(QtGui.QMainWindow):
 
 			parentWidget.setLayout(hbox)
 			self.setCentralWidget(viewer3D)
-			print "haha",self.width(),self.height()
-
-		#self.resize(500,500)
 	def closeEvent(self,event):
 		reply = QtGui.QMessageBox.question(self,"Confirmation","Are you sure to quit?",QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
